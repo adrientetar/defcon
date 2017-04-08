@@ -227,6 +227,9 @@ class Font(BaseObject):
     def __contains__(self, name):
         return name in self._glyphSet
 
+    def get(self, name, defaultFactory=None):
+        return self._glyphSet.get(name, defaultFactory)
+
     def keys(self):
         return self._glyphSet.keys()
 

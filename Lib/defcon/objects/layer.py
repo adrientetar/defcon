@@ -291,6 +291,15 @@ class Layer(BaseObject):
     def __contains__(self, name):
         return name in self.keys()
 
+    def get(self, name, defaultFactory=None):
+        if name in self:
+            return self[name]
+        if defaultFactory is True:
+            return self.newGlyph(name)
+        elif defaultFactory is not None:
+            return defaultFactory(name)
+        return defaultFactory
+
     def keys(self):
         """
         The names of all glyphs in the layer.
