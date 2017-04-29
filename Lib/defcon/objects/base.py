@@ -66,16 +66,20 @@ class BaseObject(object):
     # Notifications
     # -------------
 
+    def getDispatcher(self):
+        if self._dispatcher is not None:
+            return self.dispatcher
+        try:
+            dispatcher = self.font.getDispatcher()
+            self._dispatcher = weakref.ref(dispatcher)
+        except AttributeError:
+            dispatcher = None
+        return dispatcher
+
     def _get_dispatcher(self):
         if self._dispatcher is not None:
             return self._dispatcher()
-        else:
-            try:
-                dispatcher = self.font.dispatcher
-                self._dispatcher = weakref.ref(dispatcher)
-            except AttributeError:
-                dispatcher = None
-        return dispatcher
+        return self._dispatcher
 
     dispatcher = property(_get_dispatcher, doc="The :class:`defcon.tools.notifications.NotificationCenter` assigned to the parent of this object.")
 
@@ -100,9 +104,12 @@ class BaseObject(object):
                 notification=notification, observable=anObject)
         """
         dispatcher = self.dispatcher
-        if dispatcher is not None:
-            self.dispatcher.addObserver(observer=observer, methodName=methodName,
-                notification=notification, observable=self)
+        if dispatcher is None:
+            # lazy initialization
+            dispatcher = self.getDispatcher()
+            if dispatcher is None:
+                return
+        dispatcher.addObserver(observer=observer, methodName=methodName, notification=notification, observable=self)
 
     def removeObserver(self, observer, notification):
         """
@@ -120,7 +127,7 @@ class BaseObject(object):
         """
         dispatcher = self.dispatcher
         if dispatcher is not None:
-            self.dispatcher.removeObserver(observer=observer, notification=notification, observable=self)
+            dispatcher.removeObserver(observer=observer, notification=notification, observable=self)
 
     def hasObserver(self, observer, notification):
         """
@@ -134,7 +141,7 @@ class BaseObject(object):
         """
         dispatcher = self.dispatcher
         if dispatcher is not None:
-            return self.dispatcher.hasObserver(observer=observer, notification=notification, observable=self)
+            return dispatcher.hasObserver(observer=observer, notification=notification, observable=self)
         return False
 
     def holdNotifications(self, notification=None):
